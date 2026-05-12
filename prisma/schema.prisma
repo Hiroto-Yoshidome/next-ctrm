@@ -1,0 +1,217 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== Enum ====================
+
+enum TradeType {
+  THREE_WAY
+  EXPORT
+  IMPORT
+  DOMESTIC
+  DIRECT
+}
+
+enum TradeSide {
+  BUY
+  SELL
+}
+
+enum PricingType {
+  FIXED
+  UNFIXED
+}
+
+enum PriceFixType {
+  SPOT
+  MONTHLY_AVG
+}
+
+enum Currency {
+  USD
+  JPY
+}
+
+enum Commodity {
+  COPPER
+}
+
+enum ContractStatus {
+  DRAFT
+  CONFIRMED
+  CLOSED
+}
+
+enum PriceFixStatus {
+  DRAFT
+  CONFIRMED
+}
+
+enum RealizeType {
+  PROVISIONAL
+  ADJUSTMENT
+}
+
+enum RealizeStatus {
+  DRAFT
+  CONFIRMED
+}
+
+enum FxStatus {
+  OPEN
+  SETTLED
+}
+
+// ==================== 認証 ====================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+// ==================== マスタ ====================
+
+model Counterparty {
+  id        String     @id @default(cuid())
+  name      String
+  country   String?
+  contracts Contract[]
+  createdAt DateTime   @default(now())
+}
+
+model LmePrice {
+  id       String   @id @default(cuid())
+  date     DateTime @unique
+  priceUsd Decimal  @db.Decimal(12, 4)
+  createdAt DateTime @default(now())
+}
+
+model ExchangeRate {
+  id     String   @id @default(cuid())
+  date   DateTime @unique
+  usdJpy Decimal  @db.Decimal(10, 4)
+  createdAt DateTime @default(now())
+}
+
+// ==================== 成約 ====================
+
+model Contract {
+  id             String         @id @default(cuid())
+  tradeType      TradeType
+  side           TradeSide
+  tradeDate      DateTime
+  counterpartyId String
+  counterparty   Counterparty   @relation(fields: [counterpartyId], references: [id])
+
+  commodity      Commodity
+  quantity       Decimal        @db.Decimal(12, 4)
+  currency       Currency
+
+  priceType      PricingType
+  unitPrice      Decimal?       @db.Decimal(12, 4)
+  premium        Decimal?       @db.Decimal(12, 4)
+
+  deliveryDate   DateTime
+  memo           String?
+
+  status         ContractStatus @default(DRAFT)
+
+  priceFixes       PriceFix[]
+  sellRealizations Realize[]            @relation("SellContract")
+  buyAllocations   RealizeAllocation[]  @relation("BuyContract")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// ==================== 値決め ====================
+
+model PriceFix {
+  id         String       @id @default(cuid())
+  contractId String
+  contract   Contract     @relation(fields: [contractId], references: [id])
+
+  fixDate    DateTime
+  quantity   Decimal      @db.Decimal(12, 4)
+  fixType    PriceFixType
+
+  pricingDate  DateTime?
+  spotPrice    Decimal?   @db.Decimal(12, 4)
+
+  pricingMonth String?
+  monthlyAvg   Decimal?   @db.Decimal(12, 4)
+
+  premium    Decimal?     @db.Decimal(12, 4)
+  unitPrice  Decimal?     @db.Decimal(12, 4)
+
+  status     PriceFixStatus @default(DRAFT)
+
+  createdAt  DateTime @default(now())
+}
+
+// ==================== 計上 ====================
+
+model Realize {
+  id             String        @id @default(cuid())
+
+  sellContractId String
+  sellContract   Contract      @relation("SellContract", fields: [sellContractId], references: [id])
+
+  quantity       Decimal       @db.Decimal(12, 4)
+  realizeDate    DateTime
+  realizeType    RealizeType
+  unitPrice      Decimal?      @db.Decimal(12, 4)
+  currency       Currency
+
+  status         RealizeStatus @default(DRAFT)
+
+  allocations    RealizeAllocation[]
+  fxTransaction  FxTransaction?
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model RealizeAllocation {
+  id            String   @id @default(cuid())
+  realizeId     String
+  realize       Realize  @relation(fields: [realizeId], references: [id])
+
+  buyContractId String
+  buyContract   Contract @relation("BuyContract", fields: [buyContractId], references: [id])
+
+  quantity      Decimal  @db.Decimal(12, 4)
+}
+
+// ==================== ポジション ====================
+
+model Position {
+  id            String    @id @default(cuid())
+  commodity     Commodity
+  deliveryMonth String
+  buyQty        Decimal   @db.Decimal(12, 4) @default(0)
+  sellQty       Decimal   @db.Decimal(12, 4) @default(0)
+  netQty        Decimal   @db.Decimal(12, 4) @default(0)
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([commodity, deliveryMonth])
+}
+
+// ==================== FX債権債務 ====================
+
+model FxTransaction {
+  id         String   @id @default(cuid())
+  realizeId  String   @unique
+  realize    Realize  @relation(fields: [realizeId], references: [id])
+  amountUsd  Decimal  @db.Decimal(14, 4)
+  status     FxStatus @default(OPEN)
+  createdAt  DateTime @default(now())
+}
