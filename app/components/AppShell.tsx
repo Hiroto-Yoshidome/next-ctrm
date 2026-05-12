@@ -1,6 +1,5 @@
 import Sidebar from "./Sidebar";
-import { auth } from "@/auth";
-import { signOut } from "@/auth";
+import { auth, signOut } from "@/auth";
 
 export default async function AppShell({ children }: { children: React.ReactNode }) {
   const session = await auth();
