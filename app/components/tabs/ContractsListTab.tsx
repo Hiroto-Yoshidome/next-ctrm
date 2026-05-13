@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTab } from "@/app/contexts/TabContext";
+import dynamic from "next/dynamic";
+
+const ContractFormModal = dynamic(() => import("./ContractFormModal"), { ssr: false });
 
 interface Contract {
   id: string;
@@ -33,6 +36,11 @@ interface FilterState {
   dateTo: string;
 }
 
+type ModalState =
+  | { open: false }
+  | { open: true; mode: "create" }
+  | { open: true; mode: "edit"; contractId: string };
+
 const SIDE_LABELS: Record<string, string> = { BUY: "買", SELL: "売" };
 const FORM_LABELS: Record<string, string> = { OVERSEAS: "三国間", IMPORT: "輸入", EXPORT: "輸出", DOMESTIC: "国内" };
 const DELIVERY_LABELS: Record<string, string> = { DIRECT: "直送", STOCK: "在庫" };
@@ -58,6 +66,7 @@ export default function ContractsListTab() {
   const { openTab } = useTab();
   const [data, setData] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(false);
+  const [modal, setModal] = useState<ModalState>({ open: false });
   const [filter, setFilter] = useState<FilterState>({
     contractRef: "", side: "", tradeForm: "", status: "", dateFrom: "", dateTo: "",
   });
@@ -83,6 +92,11 @@ export default function ContractsListTab() {
     const cleared = { contractRef: "", side: "", tradeForm: "", status: "", dateFrom: "", dateTo: "" };
     setFilter(cleared);
     fetchData(cleared);
+  }
+
+  function handleSaved() {
+    setModal({ open: false });
+    fetchData(filter);
   }
 
   return (
@@ -166,52 +180,51 @@ export default function ContractsListTab() {
         </div>
       </div>
 
-      {/* 件数 */}
-      <div className="flex justify-end mb-2 shrink-0">
+      {/* ツールバー */}
+      <div className="flex items-center justify-between mb-2 shrink-0">
+        <button
+          onClick={() => setModal({ open: true, mode: "create" })}
+          className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+        >
+          ＋ 新規登録
+        </button>
         <span className="text-sm text-gray-500">{loading ? "読み込み中..." : `${data.length}件`}</span>
       </div>
 
       {/* テーブル：ヘッダ固定・成約Index列固定・横スクロール */}
       <div className="flex-1 overflow-auto border border-gray-200 rounded-lg bg-white">
-        <table className="text-sm border-collapse" style={{ minWidth: "1100px" }}>
+        <table className="text-sm border-collapse" style={{ minWidth: "1200px" }}>
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              {/* 成約Index列 - sticky */}
               <th className="sticky left-0 top-0 z-30 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap min-w-[140px]">
                 成約Index
               </th>
-              {/* スクロール列 */}
               {[
                 "売買", "取引形態", "直送/在庫", "成約日", "取引先",
                 "数量(MT)", "通貨", "インコタームズ", "価格タイプ",
                 "ベース指標", "プレミアム指標", "単価", "プレミアム",
                 "QP開始日", "QP終了日", "ステータス",
               ].map((h) => (
-                <th
-                  key={h}
-                  className="sticky top-0 z-20 bg-gray-50 border-b border-gray-200 px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap"
-                >
+                <th key={h} className="sticky top-0 z-20 bg-gray-50 border-b border-gray-200 px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap">
                   {h}
                 </th>
               ))}
+              <th className="sticky top-0 z-20 bg-gray-50 border-b border-gray-200 px-3 py-2 w-12" />
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {data.length === 0 && !loading ? (
               <tr>
-                <td colSpan={17} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={18} className="px-4 py-8 text-center text-gray-400">
                   データがありません
                 </td>
               </tr>
             ) : data.map((c) => (
               <tr
                 key={c.id}
-                onDoubleClick={() =>
-                  openTab("contract-detail", `${c.contractRef}`, { contractId: c.id })
-                }
+                onDoubleClick={() => openTab("contract-detail", c.contractRef, { contractId: c.id })}
                 className="cursor-pointer hover:bg-blue-50 transition-colors"
               >
-                {/* 成約Index - sticky */}
                 <td className="sticky left-0 z-10 bg-white border-r border-gray-100 px-3 py-2 font-mono text-blue-700 whitespace-nowrap min-w-[140px]">
                   {c.contractRef}
                 </td>
@@ -239,11 +252,28 @@ export default function ContractsListTab() {
                     {STATUS_LABELS[c.status] ?? c.status}
                   </span>
                 </td>
+                <td className="px-2 py-2 whitespace-nowrap">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setModal({ open: true, mode: "edit", contractId: c.id }); }}
+                    className="text-xs text-blue-600 hover:underline"
+                  >
+                    編集
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {modal.open && (
+        <ContractFormModal
+          mode={modal.mode}
+          editContractId={modal.mode === "edit" ? modal.contractId : undefined}
+          onClose={() => setModal({ open: false })}
+          onSaved={handleSaved}
+        />
+      )}
     </div>
   );
 }
