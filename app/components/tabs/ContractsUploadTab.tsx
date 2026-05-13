@@ -40,7 +40,7 @@ export default function ContractsUploadTab() {
       {/* フォーマット説明 */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm text-blue-800">
         <p className="font-medium mb-2">Excelフォーマット</p>
-        <p className="mb-1"><span className="font-medium">Sheet1（成約）:</span> A:成約Index / B:取引形態 / C:直送在庫区分 / D:売買区分 / E:成約日 / F:取引先名 / G:数量 / H:通貨 / I:インコタームズ / J:価格タイプ / K:ベース評価指標 / L:プレミアム評価指標 / M:単価 / N:プレミアム / O:QP開始日 / P:QP終了日 / Q:備考</p>
+        <p className="mb-1"><span className="font-medium">Sheet1（成約）:</span> A:成約Index / B:取引形態 / C:直送在庫区分 / D:売買区分 / E:成約日 / F:取引先コード / G:数量 / H:通貨 / I:インコタームズ / J:価格タイプ / K:ベース評価指標コード / L:プレミアム評価指標コード / M:単価 / N:プレミアム / O:QP開始日 / P:QP終了日 / Q:備考</p>
         <p><span className="font-medium">Sheet2（予定諸掛）:</span> A:成約Index / B:費目 / C:数量単位 / D:単価 / E:通貨</p>
       </div>
 

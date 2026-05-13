@@ -17,18 +17,18 @@ export async function POST(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { name, country } = body as { name: string; country?: string };
-  if (!name?.trim()) {
-    return NextResponse.json({ error: "取引先名は必須です" }, { status: 400 });
+  const { code, name, country } = body as { code: string; name: string; country?: string };
+  if (!code?.trim() || !name?.trim()) {
+    return NextResponse.json({ error: "コード・取引先名は必須です" }, { status: 400 });
   }
 
-  const existing = await prisma.counterparty.findUnique({ where: { name: name.trim() } });
+  const existing = await prisma.counterparty.findUnique({ where: { code: code.trim().toUpperCase() } });
   if (existing) {
-    return NextResponse.json({ error: "同名の取引先が既に存在します" }, { status: 409 });
+    return NextResponse.json({ error: "同一コードの取引先が既に存在します" }, { status: 409 });
   }
 
   const created = await prisma.counterparty.create({
-    data: { name: name.trim(), country: country?.trim() || null },
+    data: { code: code.trim().toUpperCase(), name: name.trim(), country: country?.trim() || null },
   });
   return NextResponse.json(created, { status: 201 });
 }

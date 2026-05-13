@@ -16,7 +16,7 @@ interface ContractRow {
   deliveryType: DeliveryType;
   side: TradeSide;
   tradeDate: Date;
-  counterpartyName: string;
+  counterpartyCode: string;
   quantity: number;
   currency: Currency;
   incoterms?: string;
@@ -101,10 +101,10 @@ export async function POST(req: NextRequest) {
 
   // マスタを事前取得
   const [counterparties, pricingIndices] = await Promise.all([
-    prisma.counterparty.findMany({ select: { id: true, name: true } }),
+    prisma.counterparty.findMany({ select: { id: true, code: true } }),
     prisma.pricingIndex.findMany({ select: { id: true, code: true } }),
   ]);
-  const cpMap = new Map(counterparties.map((c) => [c.name, c.id]));
+  const cpMap = new Map(counterparties.map((c) => [c.code, c.id]));
   const piMap = new Map(pricingIndices.map((p) => [p.code, p.id]));
 
   const errors: ValidationError[] = [];
@@ -133,9 +133,9 @@ export async function POST(req: NextRequest) {
     const tradeDate = cellDate(E);
     if (!tradeDate) { errors.push({ sheet: "成約", row: rowNum, message: "成約日が無効です" }); return; }
 
-    const counterpartyName = cellStr(F);
-    if (!cpMap.has(counterpartyName)) {
-      errors.push({ sheet: "成約", row: rowNum, message: `取引先「${counterpartyName}」はマスタに存在しません` });
+    const counterpartyCode = cellStr(F);
+    if (!cpMap.has(counterpartyCode)) {
+      errors.push({ sheet: "成約", row: rowNum, message: `取引先コード「${counterpartyCode}」はマスタに存在しません` });
       return;
     }
 
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
       deliveryType,
       side,
       tradeDate,
-      counterpartyName,
+      counterpartyCode,
       quantity,
       currency,
       incoterms,
@@ -244,7 +244,7 @@ export async function POST(req: NextRequest) {
           deliveryType: row.deliveryType,
           side: row.side,
           tradeDate: row.tradeDate,
-          counterpartyId: cpMap.get(row.counterpartyName)!,
+          counterpartyId: cpMap.get(row.counterpartyCode)!,
           quantity: row.quantity,
           currency: row.currency,
           incoterms: row.incoterms,

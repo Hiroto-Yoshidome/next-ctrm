@@ -81,7 +81,8 @@ model User {
 
 model Counterparty {
   id        String     @id @default(cuid())
-  name      String     @unique
+  code      String     @unique
+  name      String
   country   String?
   contracts Contract[]
   createdAt DateTime   @default(now())
