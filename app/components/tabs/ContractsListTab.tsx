@@ -162,7 +162,7 @@ export default function ContractsListTab() {
         </div>
         <div className="flex gap-2 mt-3">
           <button onClick={handleSearch} className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors">検索</button>
-          <button onClick={handleClear} className="px-4 py-1.5 border border-gray-300 text-sm rounded hover:bg-gray-50 transition-colors">クリア</button>
+          <button onClick={handleClear} className="px-4 py-1.5 border border-gray-300 text-sm text-gray-700 rounded hover:bg-gray-50 transition-colors">クリア</button>
         </div>
       </div>
 
