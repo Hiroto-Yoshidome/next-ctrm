@@ -58,15 +58,12 @@ export default function ContractsListTab() {
   const { openTab } = useTab();
   const [data, setData] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [approving, setApproving] = useState(false);
   const [filter, setFilter] = useState<FilterState>({
     contractRef: "", side: "", tradeForm: "", status: "", dateFrom: "", dateTo: "",
   });
 
   const fetchData = useCallback(async (f: FilterState) => {
     setLoading(true);
-    setSelected(new Set());
     const p = new URLSearchParams();
     if (f.contractRef) p.set("contractRef", f.contractRef);
     if (f.side) p.set("side", f.side);
@@ -87,37 +84,6 @@ export default function ContractsListTab() {
     setFilter(cleared);
     fetchData(cleared);
   }
-
-  function toggleSelect(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  function toggleAll() {
-    const draftIds = data.filter((c) => c.status === "DRAFT").map((c) => c.id);
-    const allSelected = draftIds.every((id) => selected.has(id));
-    setSelected(allSelected ? new Set() : new Set(draftIds));
-  }
-
-  async function handleApprove() {
-    const ids = [...selected];
-    if (!ids.length) return;
-    if (!confirm(`${ids.length}件の成約を承認しますか？`)) return;
-    setApproving(true);
-    const res = await fetch("/api/contracts/approve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids }),
-    });
-    setApproving(false);
-    if (res.ok) fetchData(filter);
-  }
-
-  const draftIds = data.filter((c) => c.status === "DRAFT").map((c) => c.id);
-  const allDraftSelected = draftIds.length > 0 && draftIds.every((id) => selected.has(id));
 
   return (
     <div className="flex flex-col h-full">
@@ -200,37 +166,21 @@ export default function ContractsListTab() {
         </div>
       </div>
 
-      {/* ツールバー */}
-      <div className="flex items-center justify-between mb-2 shrink-0">
-        <button
-          onClick={handleApprove}
-          disabled={selected.size === 0 || approving}
-          className="px-4 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-40 transition-colors"
-        >
-          {approving ? "承認中..." : `選択を承認 (${selected.size}件)`}
-        </button>
+      {/* 件数 */}
+      <div className="flex justify-end mb-2 shrink-0">
         <span className="text-sm text-gray-500">{loading ? "読み込み中..." : `${data.length}件`}</span>
       </div>
 
       {/* テーブル：ヘッダ固定・成約Index列固定・横スクロール */}
       <div className="flex-1 overflow-auto border border-gray-200 rounded-lg bg-white">
-        <table className="text-sm border-collapse" style={{ minWidth: "1200px" }}>
+        <table className="text-sm border-collapse" style={{ minWidth: "1100px" }}>
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
-              {/* チェックボックス列 - sticky */}
-              <th className="sticky left-0 top-0 z-30 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 w-10">
-                <input
-                  type="checkbox"
-                  checked={allDraftSelected}
-                  onChange={toggleAll}
-                  className="rounded"
-                />
-              </th>
               {/* 成約Index列 - sticky */}
-              <th className="sticky left-10 top-0 z-30 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap min-w-[140px]">
+              <th className="sticky left-0 top-0 z-30 bg-gray-50 border-b border-r border-gray-200 px-3 py-2 text-left font-medium text-gray-600 whitespace-nowrap min-w-[140px]">
                 成約Index
               </th>
-              {/* スクロール列 - sticky top のみ */}
+              {/* スクロール列 */}
               {[
                 "売買", "取引形態", "直送/在庫", "成約日", "取引先",
                 "数量(MT)", "通貨", "インコタームズ", "価格タイプ",
@@ -249,7 +199,7 @@ export default function ContractsListTab() {
           <tbody className="divide-y divide-gray-100">
             {data.length === 0 && !loading ? (
               <tr>
-                <td colSpan={18} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={17} className="px-4 py-8 text-center text-gray-400">
                   データがありません
                 </td>
               </tr>
@@ -259,26 +209,10 @@ export default function ContractsListTab() {
                 onDoubleClick={() =>
                   openTab("contract-detail", `${c.contractRef}`, { contractId: c.id })
                 }
-                className={`cursor-pointer hover:bg-blue-50 transition-colors ${selected.has(c.id) ? "bg-blue-50" : ""}`}
+                className="cursor-pointer hover:bg-blue-50 transition-colors"
               >
-                {/* チェックボックス - sticky */}
-                <td className="sticky left-0 z-10 bg-white border-r border-gray-100 px-3 py-2 w-10"
-                    style={{ backgroundColor: selected.has(c.id) ? "rgb(239 246 255)" : "white" }}>
-                  {c.status === "DRAFT" && (
-                    <input
-                      type="checkbox"
-                      checked={selected.has(c.id)}
-                      onChange={() => toggleSelect(c.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded"
-                    />
-                  )}
-                </td>
                 {/* 成約Index - sticky */}
-                <td
-                  className="sticky left-10 z-10 border-r border-gray-100 px-3 py-2 font-mono text-blue-700 whitespace-nowrap min-w-[140px]"
-                  style={{ backgroundColor: selected.has(c.id) ? "rgb(239 246 255)" : "white" }}
-                >
+                <td className="sticky left-0 z-10 bg-white border-r border-gray-100 px-3 py-2 font-mono text-blue-700 whitespace-nowrap min-w-[140px]">
                   {c.contractRef}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">

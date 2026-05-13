@@ -80,7 +80,6 @@ export default function ContractDetailTab({ contractId }: { contractId: string }
   const { openTab } = useTab();
   const [data, setData] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
-  const [approving, setApproving] = useState(false);
 
   useEffect(() => {
     fetch(`/api/contracts/${contractId}`)
@@ -88,20 +87,6 @@ export default function ContractDetailTab({ contractId }: { contractId: string }
       .then(setData)
       .finally(() => setLoading(false));
   }, [contractId]);
-
-  async function handleApprove() {
-    if (!data || !confirm("この成約を承認しますか？")) return;
-    setApproving(true);
-    const res = await fetch("/api/contracts/approve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ids: [data.id] }),
-    });
-    setApproving(false);
-    if (res.ok) {
-      setData((prev) => prev ? { ...prev, status: "CONFIRMED" } : prev);
-    }
-  }
 
   if (loading) return <p className="text-sm text-gray-400">読み込み中...</p>;
   if (!data) return <p className="text-sm text-red-500">データが見つかりません</p>;
@@ -118,15 +103,6 @@ export default function ContractDetailTab({ contractId }: { contractId: string }
           <span className={`px-2.5 py-1 rounded text-sm font-medium ${STATUS_COLORS[data.status]}`}>
             {STATUS_LABELS[data.status]}
           </span>
-          {data.status === "DRAFT" && (
-            <button
-              onClick={handleApprove}
-              disabled={approving}
-              className="px-4 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
-            >
-              {approving ? "承認中..." : "承認する"}
-            </button>
-          )}
           <button
             onClick={() => openTab("contracts-list", "成約一覧")}
             className="px-4 py-1.5 border border-gray-300 text-sm rounded hover:bg-gray-50 transition-colors"
