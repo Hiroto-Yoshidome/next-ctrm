@@ -132,7 +132,7 @@ export default function ContractsListTab() {
               type="text"
               value={filter.contractRef}
               onChange={(e) => setFilter({ ...filter, contractRef: e.target.value })}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
               placeholder="部分一致"
             />
           </div>
@@ -141,7 +141,7 @@ export default function ContractsListTab() {
             <select
               value={filter.side}
               onChange={(e) => setFilter({ ...filter, side: e.target.value })}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">すべて</option>
               <option value="BUY">買</option>
@@ -153,7 +153,7 @@ export default function ContractsListTab() {
             <select
               value={filter.tradeForm}
               onChange={(e) => setFilter({ ...filter, tradeForm: e.target.value })}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">すべて</option>
               <option value="OVERSEAS">三国間</option>
@@ -167,7 +167,7 @@ export default function ContractsListTab() {
             <select
               value={filter.status}
               onChange={(e) => setFilter({ ...filter, status: e.target.value })}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
             >
               <option value="">すべて</option>
               <option value="DRAFT">下書</option>
@@ -181,7 +181,7 @@ export default function ContractsListTab() {
               type="date"
               value={filter.dateFrom}
               onChange={(e) => setFilter({ ...filter, dateFrom: e.target.value })}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div>
@@ -190,7 +190,7 @@ export default function ContractsListTab() {
               type="date"
               value={filter.dateTo}
               onChange={(e) => setFilter({ ...filter, dateTo: e.target.value })}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
         </div>

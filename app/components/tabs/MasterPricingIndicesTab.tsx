@@ -83,7 +83,7 @@ export default function MasterPricingIndicesTab() {
               type="text"
               value={form.code}
               onChange={(e) => setForm({ ...form, code: e.target.value })}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
               placeholder="LME_COPPER"
             />
           </div>
@@ -93,7 +93,7 @@ export default function MasterPricingIndicesTab() {
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="LME銅"
             />
           </div>
@@ -103,7 +103,7 @@ export default function MasterPricingIndicesTab() {
               type="text"
               value={form.unit}
               onChange={(e) => setForm({ ...form, unit: e.target.value })}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="USD/MT"
             />
           </div>
@@ -144,7 +144,7 @@ export default function MasterPricingIndicesTab() {
                       <input
                         value={editForm.name}
                         onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
                       />
                     ) : pi.name}
                   </td>
@@ -153,7 +153,7 @@ export default function MasterPricingIndicesTab() {
                       <input
                         value={editForm.unit}
                         onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                        className="w-24 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900"
                       />
                     ) : pi.unit}
                   </td>

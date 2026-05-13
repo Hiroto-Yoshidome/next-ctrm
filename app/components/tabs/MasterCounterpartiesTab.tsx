@@ -83,7 +83,7 @@ export default function MasterCounterpartiesTab() {
               type="text"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="ABC Trading Co."
             />
           </div>
@@ -93,7 +93,7 @@ export default function MasterCounterpartiesTab() {
               type="text"
               value={form.country}
               onChange={(e) => setForm({ ...form, country: e.target.value })}
-              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Japan"
             />
           </div>
