@@ -1,43 +1,41 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTab, type TabType } from "@/app/contexts/TabContext";
 
-const navItems = [
-  { href: "/", label: "ダッシュボード" },
-  { href: "/contracts", label: "成約管理" },
-  { href: "/price-fix", label: "値決め管理" },
-  { href: "/realize", label: "計上管理" },
-  { href: "/positions", label: "ポジション" },
-  { href: "/mtm", label: "MTM評価" },
-  { href: "/reports", label: "帳票出力" },
-  { href: "/upload", label: "アップロード" },
+const navItems: { label: string; type: TabType; title: string }[] = [
+  { label: "ダッシュボード", type: "dashboard", title: "ダッシュボード" },
+  { label: "成約一覧", type: "contracts-list", title: "成約一覧" },
+  { label: "成約アップロード", type: "contracts-upload", title: "成約アップロード" },
+  { label: "取引先マスタ", type: "master-counterparties", title: "取引先マスタ" },
+  { label: "評価指標マスタ", type: "master-pricing-indices", title: "評価指標マスタ" },
 ];
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const { openTab, tabs, activeTabId } = useTab();
 
   return (
-    <aside className="w-56 min-h-screen bg-gray-900 text-gray-100 flex flex-col">
-      <div className="px-4 py-5 border-b border-gray-700">
+    <aside className="w-52 min-h-screen bg-gray-900 text-gray-100 flex flex-col shrink-0">
+      <div className="px-4 py-4 border-b border-gray-700">
         <p className="text-xs text-gray-400 font-medium tracking-widest uppercase">Next-CTRM</p>
         <p className="text-xs text-gray-500 mt-0.5">銅トレーディング管理</p>
       </div>
-      <nav className="flex-1 px-2 py-4 space-y-0.5">
+      <nav className="flex-1 px-2 py-3 space-y-0.5">
         {navItems.map((item) => {
-          const active = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+          const isActive = tabs.some(
+            (t) => t.id === activeTabId && t.type === item.type
+          );
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center px-3 py-2 rounded text-sm transition-colors ${
-                active
+            <button
+              key={item.type}
+              onClick={() => openTab(item.type, item.title)}
+              className={`w-full flex items-center px-3 py-2 rounded text-sm transition-colors text-left ${
+                isActive
                   ? "bg-blue-600 text-white"
                   : "text-gray-300 hover:bg-gray-800 hover:text-white"
               }`}
             >
               {item.label}
-            </Link>
+            </button>
           );
         })}
       </nav>

@@ -9,12 +9,16 @@ datasource db {
 
 // ==================== Enum ====================
 
-enum TradeType {
-  THREE_WAY
-  EXPORT
+enum TradeForm {
+  OVERSEAS
   IMPORT
+  EXPORT
   DOMESTIC
+}
+
+enum DeliveryType {
   DIRECT
+  STOCK
 }
 
 enum TradeSide {
@@ -35,10 +39,6 @@ enum PriceFixType {
 enum Currency {
   USD
   JPY
-}
-
-enum Commodity {
-  COPPER
 }
 
 enum ContractStatus {
@@ -81,55 +81,95 @@ model User {
 
 model Counterparty {
   id        String     @id @default(cuid())
-  name      String
+  name      String     @unique
   country   String?
   contracts Contract[]
   createdAt DateTime   @default(now())
 }
 
-model LmePrice {
-  id       String   @id @default(cuid())
-  date     DateTime @unique
-  priceUsd Decimal  @db.Decimal(12, 4)
-  createdAt DateTime @default(now())
+model PricingIndex {
+  id               String        @id @default(cuid())
+  code             String        @unique
+  name             String
+  unit             String
+  isActive         Boolean       @default(true)
+  baseContracts    Contract[]    @relation("BaseIndex")
+  premiumContracts Contract[]    @relation("PremiumIndex")
+  marketPrices     MarketPrice[]
+  createdAt        DateTime      @default(now())
+}
+
+model MarketPrice {
+  id             String       @id @default(cuid())
+  pricingIndexId String
+  pricingIndex   PricingIndex @relation(fields: [pricingIndexId], references: [id])
+  date           DateTime
+  priceUsd       Decimal      @db.Decimal(12, 4)
+  createdAt      DateTime     @default(now())
+
+  @@unique([pricingIndexId, date])
 }
 
 model ExchangeRate {
-  id     String   @id @default(cuid())
-  date   DateTime @unique
-  usdJpy Decimal  @db.Decimal(10, 4)
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  usdJpy    Decimal  @db.Decimal(10, 4)
   createdAt DateTime @default(now())
 }
 
 // ==================== 成約 ====================
 
 model Contract {
-  id             String         @id @default(cuid())
-  tradeType      TradeType
-  side           TradeSide
-  tradeDate      DateTime
+  id           String       @id @default(cuid())
+  contractRef  String       @unique
+  tradeForm    TradeForm
+  deliveryType DeliveryType
+  side         TradeSide
+  tradeDate    DateTime
+
   counterpartyId String
-  counterparty   Counterparty   @relation(fields: [counterpartyId], references: [id])
+  counterparty   Counterparty @relation(fields: [counterpartyId], references: [id])
 
-  commodity      Commodity
-  quantity       Decimal        @db.Decimal(12, 4)
-  currency       Currency
+  quantity Decimal  @db.Decimal(12, 4)
+  currency Currency
+  incoterms String?
 
-  priceType      PricingType
-  unitPrice      Decimal?       @db.Decimal(12, 4)
-  premium        Decimal?       @db.Decimal(12, 4)
+  priceType PricingType
 
-  deliveryDate   DateTime
-  memo           String?
+  basePricingIndexId    String
+  basePricingIndex      PricingIndex  @relation("BaseIndex", fields: [basePricingIndexId], references: [id])
+  premiumPricingIndexId String?
+  premiumPricingIndex   PricingIndex? @relation("PremiumIndex", fields: [premiumPricingIndexId], references: [id])
 
-  status         ContractStatus @default(DRAFT)
+  unitPrice Decimal? @db.Decimal(12, 4)
+  premium   Decimal? @db.Decimal(12, 4)
 
+  qpStartDate DateTime?
+  qpEndDate   DateTime?
+
+  memo   String?
+  status ContractStatus @default(DRAFT)
+
+  expenses         ContractExpense[]
   priceFixes       PriceFix[]
-  sellRealizations Realize[]            @relation("SellContract")
-  buyAllocations   RealizeAllocation[]  @relation("BuyContract")
+  sellRealizations Realize[]           @relation("SellContract")
+  buyAllocations   RealizeAllocation[] @relation("BuyContract")
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==================== 予定諸掛 ====================
+
+model ContractExpense {
+  id           String   @id @default(cuid())
+  contractId   String
+  contract     Contract @relation(fields: [contractId], references: [id])
+  expenseType  String
+  quantityUnit String
+  unitPrice    Decimal  @db.Decimal(12, 4)
+  currency     Currency
+  createdAt    DateTime @default(now())
 }
 
 // ==================== 値決め ====================
@@ -139,79 +179,62 @@ model PriceFix {
   contractId String
   contract   Contract     @relation(fields: [contractId], references: [id])
 
-  fixDate    DateTime
-  quantity   Decimal      @db.Decimal(12, 4)
-  fixType    PriceFixType
+  fixDate  DateTime
+  quantity Decimal      @db.Decimal(12, 4)
+  fixType  PriceFixType
 
   pricingDate  DateTime?
-  spotPrice    Decimal?   @db.Decimal(12, 4)
-
+  spotPrice    Decimal?  @db.Decimal(12, 4)
   pricingMonth String?
-  monthlyAvg   Decimal?   @db.Decimal(12, 4)
+  monthlyAvg   Decimal?  @db.Decimal(12, 4)
 
-  premium    Decimal?     @db.Decimal(12, 4)
-  unitPrice  Decimal?     @db.Decimal(12, 4)
+  premium   Decimal? @db.Decimal(12, 4)
+  unitPrice Decimal? @db.Decimal(12, 4)
 
-  status     PriceFixStatus @default(DRAFT)
-
-  createdAt  DateTime @default(now())
+  status    PriceFixStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
 }
 
 // ==================== 計上 ====================
 
 model Realize {
   id             String        @id @default(cuid())
-
   sellContractId String
   sellContract   Contract      @relation("SellContract", fields: [sellContractId], references: [id])
 
-  quantity       Decimal       @db.Decimal(12, 4)
-  realizeDate    DateTime
-  realizeType    RealizeType
-  unitPrice      Decimal?      @db.Decimal(12, 4)
-  currency       Currency
+  quantity    Decimal       @db.Decimal(12, 4)
+  realizeDate DateTime
+  realizeType RealizeType
+  unitPrice   Decimal?      @db.Decimal(12, 4)
+  currency    Currency
 
-  status         RealizeStatus @default(DRAFT)
+  status RealizeStatus @default(DRAFT)
 
-  allocations    RealizeAllocation[]
-  fxTransaction  FxTransaction?
+  allocations   RealizeAllocation[]
+  fxTransaction FxTransaction?
 
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model RealizeAllocation {
-  id            String   @id @default(cuid())
-  realizeId     String
-  realize       Realize  @relation(fields: [realizeId], references: [id])
+  id        String  @id @default(cuid())
+  realizeId String
+  realize   Realize @relation(fields: [realizeId], references: [id])
 
   buyContractId String
   buyContract   Contract @relation("BuyContract", fields: [buyContractId], references: [id])
 
-  quantity      Decimal  @db.Decimal(12, 4)
-}
-
-// ==================== ポジション ====================
-
-model Position {
-  id            String    @id @default(cuid())
-  commodity     Commodity
-  deliveryMonth String
-  buyQty        Decimal   @db.Decimal(12, 4) @default(0)
-  sellQty       Decimal   @db.Decimal(12, 4) @default(0)
-  netQty        Decimal   @db.Decimal(12, 4) @default(0)
-  updatedAt     DateTime  @updatedAt
-
-  @@unique([commodity, deliveryMonth])
+  quantity Decimal @db.Decimal(12, 4)
 }
 
 // ==================== FX債権債務 ====================
 
 model FxTransaction {
-  id         String   @id @default(cuid())
-  realizeId  String   @unique
-  realize    Realize  @relation(fields: [realizeId], references: [id])
-  amountUsd  Decimal  @db.Decimal(14, 4)
-  status     FxStatus @default(OPEN)
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  realizeId String   @unique
+  realize   Realize  @relation(fields: [realizeId], references: [id])
+  amountUsd Decimal  @db.Decimal(14, 4)
+  status    FxStatus @default(OPEN)
+  createdAt DateTime @default(now())
 }
